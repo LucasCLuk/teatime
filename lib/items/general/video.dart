@@ -53,7 +53,12 @@ class _VideoAppState extends State<VideoApp> {
               : LoadingScreen(),
         ),
       ),
-      bottomSheet: VideoProgressIndicator(_controller,allowScrubbing: true,),
+      bottomSheet: Container(
+          height: 25.0,
+          child: VideoProgressIndicator(
+            _controller,
+            allowScrubbing: true,
+          )),
     );
   }
 }

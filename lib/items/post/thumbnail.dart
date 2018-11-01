@@ -44,6 +44,28 @@ class _ThumbnailState extends State<Thumbnail> {
     );
   }
 
+  Future<List<dynamic>> getImageUrl() async {
+    Uri imageUri = widget.submission.url;
+    bool isVideo = false;
+    try {
+      imageUri = Uri.parse(
+          widget.submission.data['media']['reddit_video']["fallback_url"]);
+      isVideo = true;
+    } catch (e) {
+      print(e);
+    }
+    try {
+      imageUri = widget.submission.variants[0]['gif'].resolutions[2].url;
+    } catch (e) {
+      print(e);
+    }
+    if (URLHandler(imageUri.toString()).isMedia()) {
+      return [imageUri, isVideo];
+    } else {
+      return [null, false];
+    }
+  }
+
   void _onTap() async {
     CustomTabsOption option = CustomTabsOption(
       toolbarColor: Theme.of(context).primaryColor,
@@ -52,7 +74,6 @@ class _ThumbnailState extends State<Thumbnail> {
       showPageTitle: true,
       animation: new CustomTabsAnimation.slideIn(),
     );
-    bool _isVideo = false;
     URLHandler urlHandler = URLHandler(url.toString());
     if (urlHandler.isExternal()) {
       if (await urlLauncher.canLaunch(urlHandler.url)) {
@@ -61,34 +82,20 @@ class _ThumbnailState extends State<Thumbnail> {
     } else if (urlHandler.isReddit()) {
       if (widget.isDetailScreen == false)
         RedditProvider.of(context).clickPost(context, widget.submission);
-    } else if (urlHandler.isMedia()) {
-      String mediaUrl = thumbnailUri.toString();
-      try {
-        mediaUrl =
-            widget.submission.data['media']['reddit_video']["fallback_url"];
-        _isVideo = true;
-      } catch (e) {
-        List<Map<String, SubmissionPreview>> variants =
-            widget.submission.variants;
-        if (variants.isNotEmpty) {
-          mediaUrl = variants[0]['gif'].resolutions[2].url.toString();
-        } else {
-          mediaUrl = submissionUrl.toString();
-        }
-        if (URLHandler(mediaUrl).isGif()){
-          _isVideo = true;
-        }
-      }
-      Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => MediaView(
-                isVideo: _isVideo,
-                url: mediaUrl,
-              )));
     } else {
       try {
-        await launch(urlHandler.url, option: option);
+        var mediaUrl = await getImageUrl();
+        if (mediaUrl[0] != null) {
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => MediaView(
+                    isVideo: mediaUrl[1],
+                    url: mediaUrl[0].toString(),
+                  )));
+        } else {
+          await launch(urlHandler.url, option: option);
+        }
       } catch (e) {
-        debugPrint(e);
+        print("Error: $e");
       }
     }
     return;
