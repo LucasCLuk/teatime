@@ -139,21 +139,26 @@ class RedditBloc {
   }
 
   Future<Null> createAuthReddit() async {
-    try {
-      reddit = await Reddit.restoreAuthenticatedInstance(
-        json.encode(currentAccount.authMap()),
-        userAgent: credentials.userAgent,
-        clientId: credentials.clientId,
-        redirectUri: credentials.redirectUri,
-        clientSecret: credentials.clientSecret,
-      ).timeout(Duration(seconds: TIMEOUT), onTimeout: () {
-        if (!isBuiltSubject.isClosed) {
-          isBuiltSubject.addError(DRAWAuthenticationError(ERRORMESSAGE));
-        }
-      });
-      await currentAccount.load(state: reddit);
-    } catch (e) {
-      isBuiltSubject.addError(e);
+    var data = currentAccount?.authMap();
+    if (data != null) {
+      try {
+        reddit = await Reddit.restoreAuthenticatedInstance(
+          json.encode(data),
+          userAgent: credentials.userAgent,
+          clientId: credentials.clientId,
+          redirectUri: credentials.redirectUri,
+          clientSecret: credentials.clientSecret,
+        ).timeout(Duration(seconds: TIMEOUT), onTimeout: () {
+          if (!isBuiltSubject.isClosed) {
+            isBuiltSubject.addError(DRAWAuthenticationError(ERRORMESSAGE));
+          }
+        });
+        await currentAccount.load(state: reddit);
+      } catch (e) {
+        isBuiltSubject.addError(e);
+      }
+    } else {
+      await createAnonReddit();
     }
   }
 
@@ -434,13 +439,13 @@ class RedditBloc {
     }
   }
 
-  Future<Null> clickPost(BuildContext context,Submission post) async {
+  Future<Null> clickPost(BuildContext context, Submission post) async {
     preferences.clickPost(post);
     Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => PostDetail(
-              post: post,
-            )));
+                  post: post,
+                )));
   }
 }
