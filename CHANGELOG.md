@@ -3,11 +3,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [Build 22] - 2018-11-03
+
 ### Added
 - Trending Subreddits are now a thing!
 
 ### Changed
-- Dropped support for multiple accounts
+- **Breaking change:** Dropped support for multiple accounts
 - Changed how to log in and logout
 
 ### Fixed

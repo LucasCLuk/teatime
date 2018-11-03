@@ -119,21 +119,24 @@ class RedditBloc {
   RedditBloc({@required this.preferences});
 
   Future<Null> initialize() async {
-    isBuiltSubject.add(false);
-    await loadSubreddits();
-    packageInfo = await PackageInfo.fromPlatform();
-    credentials = await RedditCredentials.buildRedditCredentials(packageInfo);
-    listingBloc =
-        ListingBloc(endpoint: "/", redditState: this, isSubreddit: true);
-    if (preferences.currentAccountName != null) {
-      await preferences.loadCurrentAccount();
-      await createAuthReddit();
-    } else {
-      await createAnonReddit();
-      preferences.currentAccount = Account(reddit: reddit);
+    try {
+      isBuiltSubject.add(false);
+      await loadSubreddits();
+      packageInfo = await PackageInfo.fromPlatform();
+      credentials = await RedditCredentials.buildRedditCredentials(packageInfo);
+      listingBloc =
+              ListingBloc(endpoint: "/", redditState: this, isSubreddit: true);
+      if (preferences.currentAccountName != null) {
+            await preferences.loadCurrentAccount();
+            await createAuthReddit();
+          } else {
+            await createAnonReddit();
+            preferences.currentAccount = Account(reddit: reddit);
+          }
+      addListeners();
+      if (reddit != null) isBuiltSubject.add(true);
+    } catch (e) {
     }
-    addListeners();
-    if (reddit != null) isBuiltSubject.add(true);
   }
 
   void showSnackBar(String message) {

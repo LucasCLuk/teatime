@@ -134,16 +134,19 @@ class AppPreferences {
   }
 
   AppPreferences.fromPreferences(SharedPreferences preferences) {
-    uuid = preferences.getString("uuid") ?? Uuid().v4();
-    appTheme = AppThemes.values[preferences.getInt("theme") ?? 1];
-    filterNSFW = preferences.getBool("filterNSFW") ?? true;
-    currentSort =
-        SupportedSortTypes.values[preferences.getInt('currentSort') ?? 0];
-    currentRange = PostRange.values[preferences.getInt('currentRange') ?? 0];
-    compactDrawer = preferences.getBool("compactDrawer") ?? false;
-    isTracking = preferences.getBool("isTracking") ?? true;
-    currentAccountName = preferences.getString('currentAccount');
-    clicked = Queue.from(preferences.getStringList("clicked") ?? []);
+    try {
+      uuid = preferences.getString("uuid") ?? Uuid().v4();
+      appTheme = AppThemes.values[preferences.getInt("theme") ?? 1];
+      filterNSFW = preferences.getBool("filterNSFW") ?? true;
+      currentSort =
+              SupportedSortTypes.values[preferences.getInt('currentSort') ?? 0];
+      currentRange = PostRange.values[preferences.getInt('currentRange') ?? 0];
+      compactDrawer = preferences.getBool("compactDrawer") ?? false;
+      isTracking = preferences.getBool("isTracking") ?? true;
+      currentAccountName = preferences.getString('currentAccount');
+      clicked = Queue.from(preferences.getStringList("clicked") ?? []);
+    } catch (e) {
+    }
     _addListeners();
   }
 
