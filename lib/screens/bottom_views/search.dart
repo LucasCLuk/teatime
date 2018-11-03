@@ -164,6 +164,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
   Widget build(BuildContext context) {
     redditState = RedditProvider.of(context);
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       appBar: buildSearchBar(context),
       body: isSearching
           ? buildResults()
