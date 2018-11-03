@@ -14,7 +14,7 @@ class History extends StatefulWidget {
 }
 
 class _HistoryState extends State<History> {
-  GlobalKey scaffoldKey = GlobalKey();
+  GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
   RedditBloc redditState;
 
 

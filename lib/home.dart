@@ -28,7 +28,6 @@ class _HomeState extends State<Home>
     "text": Icon(Icons.comment)
   };
   final PageStorageBucket bucket = PageStorageBucket();
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
   bool hideBottomNav = false;
   RedditBloc redditState;
 
@@ -109,7 +108,6 @@ class _HomeState extends State<Home>
 
   Scaffold _buildScaffold() {
     return new Scaffold(
-      key: scaffoldKey,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex:
             redditState.currentPosition.index ?? BottomScreens.home.index,

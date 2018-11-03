@@ -1,3 +1,6 @@
+import 'package:fluro/fluro.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
 import 'package:teatime/home.dart';
 import 'package:teatime/screens/general/compose_comment.dart';
 import 'package:teatime/screens/general/history.dart';
@@ -7,9 +10,6 @@ import 'package:teatime/screens/settings/menu.dart';
 import 'package:teatime/screens/settings/preferences.dart';
 import 'package:teatime/screens/sidebar/friends.dart';
 import 'package:teatime/utils/redditViewModel.dart';
-import 'package:fluro/fluro.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 
 class Routes {
   static String root = "/";
@@ -101,14 +101,14 @@ class Routes {
   static Handler webHandler = new Handler(
       handlerFunc: (BuildContext context, Map<String, dynamic> params) {
     var target = params['url'][0];
-    return Dismissible(
-        child: WebviewScaffold(
-          appBar: AppBar(
-              automaticallyImplyLeading: true,
-              title: Text(target.url.toString())),
-          url: target.url.toString(),
-        ),
-        key: Key(target.url.toString()));
+    CustomTabsOption option = CustomTabsOption(
+      toolbarColor: Theme.of(context).primaryColor,
+      enableDefaultShare: false,
+      enableUrlBarHiding: true,
+      showPageTitle: false,
+      animation: new CustomTabsAnimation.slideIn(),
+    );
+    launch(target, option: option);
   });
 
   static Handler historyHandler = new Handler(

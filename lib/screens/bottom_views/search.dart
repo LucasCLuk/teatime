@@ -21,7 +21,7 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
   String query = "";
   List<dynamic> results = [];
   bool isSearching = false;
-  List<String> qOptions = ["Posts With", "Subreddits With", "Go to user"];
+  List<String> qOptions = ["Posts With", "Subreddits With"];
   String searchType;
 
   AppBar buildSearchBar(BuildContext context) {
@@ -164,7 +164,6 @@ class _SearchPageState extends State<SearchPage> with RouteAware {
   Widget build(BuildContext context) {
     redditState = RedditProvider.of(context);
     return Scaffold(
-      resizeToAvoidBottomPadding: false,
       appBar: buildSearchBar(context),
       body: isSearching
           ? buildResults()

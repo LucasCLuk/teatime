@@ -6,6 +6,7 @@ import 'package:teatime/items/general/linkable.dart';
 import 'package:teatime/items/general/subreddit_search.dart';
 import 'package:teatime/items/profile/profile.dart';
 import 'package:teatime/items/subreddit/icon_builder.dart';
+import 'package:teatime/utils/dialogs.dart';
 import 'package:teatime/utils/enums.dart';
 import 'package:teatime/utils/redditBloc.dart';
 import 'package:teatime/utils/redditViewModel.dart';
@@ -166,15 +167,14 @@ class _MyDrawerState extends State<MyDrawer> {
           () => setPosition(BottomScreens.home)),
       buildItem(Icon(Icons.flip_to_front), Text("Front Page"), setFrontPage),
       buildItem(Icon(Icons.call_made), Text("Popular"),
-          () => redditState.changeSubreddit(context, "popular"), true),
+          () => redditState.changeSubreddit(context, "r/popular/"), true),
       buildItem(Icon(Icons.equalizer), Text("All"),
-          () => redditState.changeSubreddit(context, "all"), true),
+          () => redditState.changeSubreddit(context, "r/all/"), true),
       buildItem(
           Icon(Icons.star),
           Text("Saved"),
           redditState.isLoggedIn
-              ? () => redditState.changeSubreddit(
-                  context, "${redditState.currentAccount.redditor.path}saved")
+              ? () => Navigator.pushNamed(context, "/saved")
               : null,
           true,
           redditState.isLoggedIn),
@@ -198,7 +198,6 @@ class _MyDrawerState extends State<MyDrawer> {
           true,
           redditState.isLoggedIn),
       Divider(),
-      buildGoTo(),
       buildItem(Icon(Icons.subscriptions), Text("Subscriptions"),
           openSubscriptions, false, redditState.isLoggedIn),
       buildItem(
@@ -253,47 +252,47 @@ class _MyDrawerState extends State<MyDrawer> {
     return ListView(children: menu);
   }
 
-  List<Widget> buildAccounts() {
-    return redditState.preferences.linkedAccountNames.map((String accountName) {
-      ListTile(
-        leading: Icon(Icons.account_circle),
-        title: Text(accountName),
-        trailing: IconButton(
-            icon: Icon(Icons.delete_forever),
-            onPressed: () async {
-              await redditState.removeAccount(accountName);
-            }),
-        onTap: () async {
-          Navigator.of(context).popUntil(ModalRoute.withName("/"));
-          await redditState.switchAccount(accountName);
-        },
-      );
-    }).toList();
-  }
+//  List<Widget> buildAccounts() {
+//    return redditState.preferences.linkedAccountNames.map((String accountName) {
+//      ListTile(
+//        leading: Icon(Icons.account_circle),
+//        title: Text(accountName),
+//        trailing: IconButton(
+//            icon: Icon(Icons.delete_forever),
+//            onPressed: () async {
+//              await redditState.removeAccount(accountName);
+//            }),
+//        onTap: () async {
+//          Navigator.of(context).popUntil(ModalRoute.withName("/"));
+//          await redditState.switchAccount(accountName);
+//        },
+//      );
+//    }).toList();
+//  }
 
-  ListView buildNonCompactExpanded() {
-    List<Widget> accountList = buildAccounts();
-    return ListView(
-        children: <Widget>[
-      buildHeader(),
-    ]
-          ..addAll(accountList)
-          ..addAll([
-            buildItem(Icon(Icons.add), Text("Add new Account"), () async {
-              await redditState.login(context);
-              setState(() {});
-            }, true),
-            Divider(),
-            redditState.isLoggedIn
-                ? buildItem(Icon(Icons.cancel), Text("Sign out"), () async {
-                    await redditState.logout();
-                  }, true)
-                : Container(
-                    width: 0.0,
-                    height: 0.0,
-                  )
-          ]));
-  }
+//  ListView buildNonCompactExpanded() {
+//    List<Widget> accountList = buildAccounts();
+//    return ListView(
+//        children: <Widget>[
+//      buildHeader(),
+//    ]
+//          ..addAll(accountList)
+//          ..addAll([
+//            buildItem(Icon(Icons.add), Text("Add new Account"), () async {
+//              await redditState.login(context);
+//              setState(() {});
+//            }, true),
+//            Divider(),
+//            redditState.isLoggedIn
+//                ? buildItem(Icon(Icons.cancel), Text("Sign out"), () async {
+//                    await redditState.logout();
+//                  }, true)
+//                : Container(
+//                    width: 0.0,
+//                    height: 0.0,
+//                  )
+//          ]));
+//  }
 
   Widget buildHeader() {
     return new UserAccountsDrawerHeader(
@@ -306,6 +305,17 @@ class _MyDrawerState extends State<MyDrawer> {
             await redditState.login(context);
           }
         },
+        onLongPress: redditState.isLoggedIn
+            ? () async {
+                if (redditState.isLoggedIn) {
+                  var confirm =
+                      await Dialogs.showLogoutConfirmationDialog(context);
+                  if (confirm == true) {
+                    await redditState.logout();
+                  }
+                }
+              }
+            : null,
         child: ProfileIcon(
           iconURL: redditState.isLoggedIn == true
               ? redditState.currentAccount.redditor.data['icon_img']
@@ -314,7 +324,7 @@ class _MyDrawerState extends State<MyDrawer> {
       ),
       accountName: Center(
           child: Padding(
-        padding: const EdgeInsets.only(left: 8.0),
+        padding: const EdgeInsets.only(left: 16.0),
         child: Text(
             redditState?.currentAccount?.redditor?.displayName ?? "Anonymous"),
       )),
@@ -330,11 +340,11 @@ class _MyDrawerState extends State<MyDrawer> {
           Icon(Icons.comment),
         ],
       ),
-      onDetailsPressed: () {
-        setState(() {
-          isExpanded = !isExpanded;
-        });
-      },
+//      onDetailsPressed: () {
+//        setState(() {
+//          isExpanded = !isExpanded;
+//        });
+//      },
     );
   }
 
@@ -348,9 +358,7 @@ class _MyDrawerState extends State<MyDrawer> {
             child: SubredditIcon(
               subreddit: subreddit,
               radius: 30.0,
-              onTap: () => redditState
-                  .changeSubreddit(context, subreddit)
-                  .then((_) => Navigator.pop(context)),
+              onTap: () => redditState.changeSubreddit(context, subreddit),
             ),
           );
           return menuItem;
@@ -412,7 +420,7 @@ class _MyDrawerState extends State<MyDrawer> {
               children: <Widget>[
                 buildHeader(),
               ]
-                ..addAll(buildAccounts())
+//                ..addAll(buildAccounts())
                 ..addAll([
                   buildItem(Icon(Icons.add), Text("Add new Account"), () async {
                     await redditState.login(context);
@@ -437,11 +445,11 @@ class _MyDrawerState extends State<MyDrawer> {
   }
 
   Widget buildCompact() {
-    return isExpanded ? buildCompactExpanded() : buildCompactNormal();
+    return buildCompactNormal();
   }
 
   Widget buildNonCompact() {
-    return isExpanded ? buildNonCompactExpanded() : buildNonCompactNormal();
+    return buildNonCompactNormal();
   }
 
   @override

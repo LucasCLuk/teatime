@@ -19,10 +19,8 @@ String preferenceToString(Type type) {
       return "Int";
     case String:
       return "String";
-    case List:
-      return "StringList";
     default:
-      return "";
+      return "StringList";
   }
 }
 
@@ -129,7 +127,6 @@ class AppPreferences {
     _compactDrawerSubject.add(newcompactDrawer);
   }
 
-  List<String> linkedAccountNames = [];
   Queue<String> clicked = Queue();
 
   AppPreferences() {
@@ -146,7 +143,6 @@ class AppPreferences {
     compactDrawer = preferences.getBool("compactDrawer") ?? false;
     isTracking = preferences.getBool("isTracking") ?? true;
     currentAccountName = preferences.getString('currentAccount');
-    linkedAccountNames = preferences.getStringList("linkedAccounts") ?? [];
     clicked = Queue.from(preferences.getStringList("clicked") ?? []);
     _addListeners();
   }
@@ -157,11 +153,9 @@ class AppPreferences {
       "currentSort": currentSort.index,
       "currentRange": currentRange.index,
       "filterNSFW": filterNSFW,
-      "linkedAccounts":
-          linkedAccountNames.isNotEmpty ? linkedAccountNames : null,
       "isTracking": _isTracking,
       "compactDrawer": _compactDrawer,
-      "clicked": clicked,
+      "clicked": clicked.toList(),
       "currentAccount": currentAccountName,
       "uuid": uuid,
     };
@@ -199,7 +193,7 @@ class AppPreferences {
     return AppPreferences.fromPreferences(prefs);
   }
 
-  Future<Null> addAccount({Reddit state}) async {
+  Future<Null> signIn({Reddit state}) async {
     Account _newAccount = Account.fromAuthCredentials(
         credentials: state.auth.credentials, state: state);
     _newAccount.redditor = await state.user.me();
@@ -212,8 +206,6 @@ class AppPreferences {
     _newAccount.subscriptionOrder.sort((a, b) => a.compareTo(b));
     currentAccountName = _newAccount.accountName;
     _currentAccount = _newAccount;
-    linkedAccountNames.add(_newAccount.accountName);
-    await save();
     await _newAccount.save();
     _currentAccountSubject.add(_newAccount);
   }
@@ -229,7 +221,11 @@ class AppPreferences {
     var data = toMap();
     data.forEach((String key, dynamic value) {
       var dataType = preferenceToString(value.runtimeType);
-      prefs.setValue(dataType, key, value);
+      try {
+        prefs.setValue(dataType, key, value);
+      } catch (e) {
+        print("Unable to Save: $key");
+      }
     });
   }
 
@@ -258,19 +254,14 @@ class AppPreferences {
   }
 
   Future<Null> loadCurrentAccount() async {
-    var data = await Account.get(currentAccountName);
+    var data = await Account.get();
     if (data != null) {
-      _currentAccount = Account.fromJson(data: data);
+      _currentAccount = Account.fromPref(data: data);
     }
   }
 
-  Future<Null> deleteAccount(String accountName) async {
-    linkedAccountNames.removeWhere((key) => key == accountName);
+  Future<Null> signOut(String accountName) async {
     await save();
-    var data = await Account.get(
-        linkedAccountNames.isNotEmpty ? linkedAccountNames.first : null);
-    if (data != null)
-      _currentAccountSubject.add(Account.fromJson(state: null, data: data));
     currentAccountName = null;
     _currentAccount = null;
   }

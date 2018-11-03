@@ -31,7 +31,7 @@ class ListingBloc {
 
   bool isLoading = false;
   String after;
-  Map<String, dynamic> currentSubmissions = {};
+  Map<String, dynamic> loadedData = {};
 
   ListingBloc(
       {@required String endpoint,
@@ -80,8 +80,8 @@ class ListingBloc {
         _params['t'] =
             redditState.preferences.currentRange.toString().split(".")[1];
         _params.addAll(params ?? {});
-        if (currentSubmissions.isNotEmpty == true && after != null) {
-          _params['count'] = "${currentSubmissions.length}";
+        if (loadedData.isNotEmpty == true && after != null) {
+          _params['count'] = "${loadedData.length}";
           _params['after'] = after;
         }
       }
@@ -111,7 +111,7 @@ class ListingBloc {
         data[value.fullname] = value;
       }
       if (data.isNotEmpty) {
-        currentSubmissions.addAll(data);
+        loadedData.addAll(data);
       }
       if (!resultsSubject.isClosed) {
         resultsSubject.add(data.isNotEmpty);
@@ -126,29 +126,29 @@ class ListingBloc {
   }
 
   void clearRead() {
-    currentSubmissions.removeWhere((String key, dynamic value) =>
+    loadedData.removeWhere((String key, dynamic value) =>
         redditState.preferences.clicked.contains(key));
-    resultsSubject.add(currentSubmissions.isNotEmpty);
+    resultsSubject.add(loadedData.isNotEmpty);
   }
 
   Future<Null> refreshSubmission(dynamic target) async {
-    if (currentSubmissions.containsKey(target.fullname)) {
+    if (loadedData.containsKey(target.fullname)) {
       await target.refresh();
     }
   }
 
   void hide({Submission post}) {
-    currentSubmissions.remove(post.fullname);
+    loadedData.remove(post.fullname);
     resultsSubject.add(true);
   }
 
   void clear() {
-    currentSubmissions.clear();
+    loadedData.clear();
     resultsSubject.add(true);
   }
 
   void dispose() {
-    currentSubmissions.clear();
+    loadedData.clear();
     resultsSubject.add(null);
     resultsSubject.close();
     _isLoadingSubject.close();

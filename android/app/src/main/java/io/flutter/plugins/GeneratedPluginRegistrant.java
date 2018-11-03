@@ -2,7 +2,6 @@ package io.flutter.plugins;
 
 import io.flutter.plugin.common.PluginRegistry;
 import com.github.droibit.flutter.plugins.customtabs.CustomTabsPlugin;
-import com.flutter_webview_plugin.FlutterWebviewPlugin;
 import io.flutter.plugins.packageinfo.PackageInfoPlugin;
 import io.flutter.plugins.pathprovider.PathProviderPlugin;
 import io.flutter.plugins.share.SharePlugin;
@@ -19,7 +18,6 @@ public final class GeneratedPluginRegistrant {
       return;
     }
     CustomTabsPlugin.registerWith(registry.registrarFor("com.github.droibit.flutter.plugins.customtabs.CustomTabsPlugin"));
-    FlutterWebviewPlugin.registerWith(registry.registrarFor("com.flutter_webview_plugin.FlutterWebviewPlugin"));
     PackageInfoPlugin.registerWith(registry.registrarFor("io.flutter.plugins.packageinfo.PackageInfoPlugin"));
     PathProviderPlugin.registerWith(registry.registrarFor("io.flutter.plugins.pathprovider.PathProviderPlugin"));
     SharePlugin.registerWith(registry.registrarFor("io.flutter.plugins.share.SharePlugin"));

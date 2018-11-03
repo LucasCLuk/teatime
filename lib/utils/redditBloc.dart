@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:draw/draw.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
+import 'package:flutter_custom_tabs/flutter_custom_tabs.dart';
 import 'package:package_info/package_info.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rxdart/rxdart.dart';
@@ -15,6 +15,7 @@ import 'package:teatime/utils/enums.dart';
 import 'package:teatime/utils/preferences.dart';
 import 'package:teatime/utils/utils.dart';
 
+final RegExp trendingExp = RegExp(".*(?=:):");
 const int TIMEOUT = 5;
 const String ERRORMESSAGE = "Unable to connect";
 const List<String> subredditFields = [
@@ -46,6 +47,7 @@ class RedditBloc {
   final defaultParams = {"g": "CA", "limit": "10"};
   final Map<String, Subreddit> loadedSubreddits = {};
   final List<String> history = [];
+  List<Subreddit> trendingSubreddits = [];
   RedditCredentials credentials;
   PackageInfo packageInfo;
   ListingBloc listingBloc;
@@ -208,6 +210,14 @@ class RedditBloc {
   Future<void> login(BuildContext context) async {
     HttpServer httpServer =
         await HttpServer.bind(InternetAddress.loopbackIPv4, 4356);
+    CustomTabsOption option = CustomTabsOption(
+      toolbarColor: Theme.of(context).primaryColor,
+      enableDefaultShare: false,
+      enableUrlBarHiding: true,
+      showPageTitle: false,
+      animation: new CustomTabsAnimation.slideIn(),
+
+    );
     try {
       Reddit authenticatedReddit = Reddit.createWebFlowInstance(
         redirectUri: credentials.redirectUri,
@@ -217,42 +227,26 @@ class RedditBloc {
       );
       var authUrl = authenticatedReddit.auth
           .url(credentials.scopes, 'teatime', compactLogin: true);
-
       Stream<String> authCode = await _listen(httpServer);
       NavigatorState navigator = Navigator.of(context);
-      navigator.push(MaterialPageRoute(
-          builder: (context) => WebviewScaffold(
-                clearCache: true,
-                clearCookies: true,
-                scrollBar: true,
-                url: authUrl.toString(),
-                appBar: new AppBar(
-                  leading: IconButton(
-                      icon: Icon(Icons.arrow_back),
-                      onPressed: () async {
-                        await httpServer.close(force: true);
-                        Navigator.pop(context);
-                      }),
-                  title: Text("Authorization"),
-                ),
-              )));
+      await launch(authUrl.toString(), option: option);
       authCode.listen((code) async {
         if (code != null) {
           // If everything worked correctly, we should be able to retrieve
           // information about the authenticated account.
           await authenticatedReddit.auth.authorize(code).whenComplete(() async {
             reddit = authenticatedReddit;
-            await preferences.addAccount(state: authenticatedReddit);
+            await preferences.signIn(state: authenticatedReddit);
             listingBloc.load(refresh: true);
             await onCode.close();
-          }).whenComplete(() => httpServer.close(force: true));
+          }).whenComplete(() => httpServer.close());
         }
       }).onDone(() {
-        httpServer.close(force: true);
+        httpServer.close();
         navigator.pop();
       });
     } catch (e) {
-      httpServer.close(force: true);
+      httpServer.close();
     }
   }
 
@@ -262,6 +256,7 @@ class RedditBloc {
 
   Future<Null> changeSubreddit(
       BuildContext context, dynamic newSubreddit) async {
+    var newEndpoint = newSubreddit;
     if (newSubreddit == null) {
       currentSubreddit = null;
       history.clear();
@@ -270,15 +265,19 @@ class RedditBloc {
     }
     Navigator.popUntil(context, ModalRoute.withName("/"));
     currentPosition = BottomScreens.home;
-    newSubreddit = reddit.subreddit(newSubreddit?.displayName ?? newSubreddit);
-    await fetchSubreddit(newSubreddit);
-    String endpoint = newSubreddit?.path ?? newSubreddit;
-    history.add(endpoint);
-    listingBloc.endpoint = endpoint;
-    currentSubreddit = loadedSubreddits[newSubreddit.displayName];
+    try {
+      newSubreddit =
+          reddit.subreddit(newSubreddit?.displayName ?? newSubreddit);
+      await fetchSubreddit(newSubreddit);
+      newEndpoint = newSubreddit?.path ?? newSubreddit;
+      currentSubreddit = loadedSubreddits[newSubreddit.displayName];
+    } catch (e) {}
+    history.add(newEndpoint);
+    listingBloc.endpoint = newEndpoint;
   }
 
-  Future<Subreddit> fetchSubreddit(dynamic subreddit) async {
+  Future<Subreddit> fetchSubreddit(dynamic subreddit,
+      {bool failSliently = false}) async {
     if (subreddit is SubredditRef) {
       try {
         Subreddit data = await subreddit.populate();
@@ -288,7 +287,7 @@ class RedditBloc {
         }
         return data;
       } on DRAWAuthenticationError {
-        if (!specialSubreddits.contains(subreddit.displayName))
+        if (!specialSubreddits.contains(subreddit.displayName) && !failSliently)
           showSnackBar("Subreddit not found");
         return null;
       }
@@ -312,8 +311,28 @@ class RedditBloc {
 //    }
 //  }
 
+  Future<List<Subreddit>> getTrendingSubreddits() async {
+    if (trendingSubreddits.isNotEmpty) {
+      return trendingSubreddits;
+    }
+    var response = await reddit.get("r/trendingsubreddits");
+    var data = response['listing'][0];
+    var results = (data.title as String).replaceFirst(trendingExp, "");
+    var trendingSubStrings = results.split(",");
+    var subreddits = List<String>();
+    for (var sub in trendingSubStrings) {
+      subreddits.add(sub.trim());
+    }
+    for (var sub in subreddits) {
+      SubredditRef ref = reddit.subreddit(sub.substring(3));
+      var _data = await fetchSubreddit(ref, failSliently: true);
+      if (_data != null) trendingSubreddits.add(_data);
+    }
+    return trendingSubreddits;
+  }
+
   Future<Null> removeAccount(String accountName) async {
-    await preferences.deleteAccount(accountName);
+    await preferences.signOut(accountName);
     dispose();
     await initialize();
   }
@@ -407,7 +426,7 @@ class RedditBloc {
   }
 
   Future<Null> logout() async {
-    await preferences.deleteAccount(preferences.currentAccountName);
+    await preferences.signOut(preferences.currentAccountName);
     await preferences.save();
     initialize();
   }
@@ -429,7 +448,7 @@ class RedditBloc {
 
   Future<Null> refreshSubreddit() async {
     if (currentSubreddit != null) {
-      listingBloc.currentSubmissions.clear();
+      listingBloc.loadedData.clear();
       if (currentSubreddit != null) {
         Subreddit newSubreddit = await currentSubreddit.refresh();
         cacheSubreddits();

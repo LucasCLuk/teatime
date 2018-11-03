@@ -1,11 +1,18 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
 import 'package:draw/draw.dart';
 import 'package:flutter/material.dart';
 import 'package:oauth2/oauth2.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:teatime/utils/preferences.dart';
+
+final List<String> authFields = [
+  'accessToken',
+  'refreshToken',
+  'tokenEndpoint',
+  'scopes',
+  'expiration'
+];
 
 class Account {
   final bool anonymous;
@@ -36,7 +43,7 @@ class Account {
 
   Account({@required this.reddit, this.anonymous = true});
 
-  Account.fromJson(
+  Account.fromPref(
       {@required Map<String, dynamic> data,
       Reddit state,
       this.anonymous = false}) {
@@ -44,8 +51,10 @@ class Account {
     refreshToken = data['refreshToken'];
     tokenEndpoint = data['tokenEndpoint'];
     scopes = List.castFrom(data['scopes']);
-    (data['subscriptions'] as List<dynamic>)
-        .forEach((item) => subscriptionOrder.add((item as String)));
+    if (data.containsKey("subscriptions")){
+      (data['subscriptions'] as List<dynamic>)
+          .forEach((item) => subscriptionOrder.add((item as String)));
+    }
     expiration = DateTime.fromMillisecondsSinceEpoch(data['expiration']);
     reddit = state;
     accountName = data['accountName'];
@@ -75,7 +84,6 @@ class Account {
 
   Map<String, dynamic> toMap() {
     Map<String, dynamic> data = authMap();
-    data['expiration'] = expiration.millisecondsSinceEpoch;
     data['subscriptions'] = subscriptionOrder;
     data['clicked'] = clickedSubreddits;
     return data;
@@ -142,40 +150,42 @@ class Account {
     await getSubscriptions();
   }
 
-  static Future<File> _getFile(String accountName) async {
-    Directory appDocDir = await getApplicationDocumentsDirectory();
-    String appDocPath = appDocDir.path;
-    File fileData = File("$appDocPath/$accountName.json");
-    return fileData;
-  }
-
-  static Future<Null> delete(String accountName) async {
-    File fileData = await _getFile(accountName);
-    await fileData.delete();
+  Future<Null> delete() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var data = toMap();
+    data.forEach((String key, dynamic value) {
+      var dataType = preferenceToString(value.runtimeType);
+      prefs.setValue(dataType, key, null);
+    });
   }
 
   Future<Null> save() async {
-    File fileData = await _getFile(accountName);
-    await fileData.writeAsString(json.encode(toMap()));
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var data = toMap();
+    data.forEach((String key, dynamic value) {
+      var dataType = preferenceToString(value.runtimeType);
+      try {
+        prefs.setValue(dataType, key, value);
+      } catch (e) {
+        print(e);
+      }
+    });
   }
 
-  static Future<Map<String,dynamic>> get(String accountName) async {
-    File fileData = await _getFile(accountName);
-    try {
-      var data = json.decode(await fileData.readAsString());
-      return data;
-    } catch (e) {
-      return null;
+  static Future<Map<String, dynamic>> get() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    Map<String, dynamic> _data = {};
+    for (var item in authFields) {
+      _data[item] = await prefs.get(item);
     }
+    return _data;
   }
 
-  Future<Null> clickSubreddit(Subreddit subreddit) async {
+  Future<Null> clickSubreddit(SubredditRef subreddit) async {
     Map<String, dynamic> data = {
       "displayName": subreddit.displayName,
       "visited": DateTime.now().millisecondsSinceEpoch
     };
     clickedSubreddits.add(data);
-    save();
   }
-
 }

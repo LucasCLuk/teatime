@@ -4,13 +4,31 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased]
 
 ### Added
+- Trending Subreddits are now a thing!
+
+### Changed
+- Dropped support for multiple accounts
+- Changed how to log in and logout
+
+### Fixed
+- Occasional bug that can occur when updating
+- Black screen when selecting subreddit Icons
+- Not being able to change subreddits
+
+### Removed
+- Removed Goto menu shortcut
+
+
+## [Build 21] - 2018-11-01
+
+### Added
 - Support for silver/gold/platinum display
 - Comments now also display any gildings
-
 
 ### Changed
 - Gildings on submission moved due to space constraints
 - Image support
+- App Icon
 
 ### Fixed
 - Several bug fixes

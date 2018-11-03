@@ -6,9 +6,8 @@ import 'package:flutter/rendering.dart';
 import 'package:teatime/items/general/general.dart';
 import 'package:teatime/items/post/summary.dart';
 import 'package:teatime/items/subreddit/sidebar.dart';
-import 'package:teatime/items/subreddit/tile.dart';
+import 'package:teatime/screens/sidebar/trending.dart';
 import 'package:teatime/utils/enums.dart';
-import 'package:teatime/utils/listingBloc.dart';
 import 'package:teatime/utils/redditBloc.dart';
 //import 'package:fluttertoast/fluttertoast.dart';
 
@@ -44,11 +43,12 @@ class _HomeWidgetState extends State<HomeWidget> with RouteAware {
       stream: redditState.listingBloc.endpointStream,
       initialData: redditState.listingBloc.endpoint,
       builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+        var subreddit = redditState.listingBloc.endpoint;
         try {
           return Text(
-            snapshot.data == "/"
+            subreddit == "/"
                 ? "Home Page"
-                : snapshot.data.substring(2, snapshot.data.length - 1),
+                : subreddit.substring(2, subreddit.length - 1),
             style: TextStyle(
                 fontSize: Theme.of(context).textTheme.title.fontSize - 2),
           );
@@ -163,23 +163,7 @@ class _HomeWidgetState extends State<HomeWidget> with RouteAware {
 
   Widget buildTrending() {
     return new Drawer(
-      child: new ListingBuilder(
-          builder: (BuildContext context, ListingSnapShot<Subreddit> snapshot) {
-            if (snapshot.hasData) {
-              return SubredditTile(
-                subreddit: snapshot.data,
-                onTap: () {
-                  redditState
-                      .changeSubreddit(context, snapshot.data)
-                      .then((_) => Navigator.pop(context));
-                },
-              );
-            }
-          },
-          listingBloc: ListingBloc(
-              redditState: redditState,
-              endpoint: "/trending_subreddits",
-              isListing: false), sliverAppBar: null,),
+      child: TrendingSubreddits(),
     );
   }
 
