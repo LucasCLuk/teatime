@@ -61,27 +61,27 @@ platform :android do
            apk: '../build/app/outputs/apk/release/app-release.apk')
   end
 
-    lane :internal do
-        build_version = android_get_version_name
-        version_code = android_get_version_code
-          change_log = read_changelog(
+    lane :internal do |options|
+    build_version = options[:build]
+    version_code = options[:version]
+              change_log = read_changelog(
                changelog_path: '../CHANGELOG.md',
                section_identifier: '[Unreleased]',
                excluded_markdown_elements: ['###']
-           )
-        File.open("./metadata/android/en-US/changelogs/#{version_code}.txt", 'w+') do |file|
-          file.write change_log
-        end
-       gradle(
-         task: 'assemble',
-         build_type: 'Release')
-         upload_to_play_store(track: 'internal',skip_upload_images: true,skip_upload_screenshots: true,
-         json_key: "app/google-play-console.json",
-         apk: '../build/app/outputs/apk/release/app-release.apk')
-       stamp_changelog(
-              section_identifier: "Build #{build_version}",
-              changelog_path: '../CHANGELOG.md',
-              git_tag: last_git_tag)
+               )
+                File.open("./metadata/android/en-US/changelogs/#{version_code}.txt", 'w+') do |file|
+                  file.write change_log
+                end
+           gradle(
+             task: 'assemble',
+             build_type: 'Release')
+             upload_to_play_store(track: 'internal',skip_upload_images: true,skip_upload_screenshots: true,
+             json_key: "app/google-play-console.json",
+             apk: '../build/app/outputs/apk/release/app-release.apk')
+           stamp_changelog(
+                  section_identifier: "Build #{build_version}",
+                  changelog_path: '../CHANGELOG.md',
+                  git_tag: last_git_tag)
     end
 
 
