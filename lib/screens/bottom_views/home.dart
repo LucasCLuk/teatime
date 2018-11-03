@@ -34,8 +34,12 @@ class _HomeWidgetState extends State<HomeWidget> with RouteAware {
   void initState() {
     super.initState();
     redditState = widget.redditState;
-    redditState?.snackBarStream?.listen((String value) =>
-        Scaffold.of(context).showSnackBar(SnackBar(content: Text(value))));
+    redditState?.snackBarStream?.listen((String value) {
+      var _state = Scaffold.of(context, nullOk: true);
+      if (_state != null) {
+        _state.showSnackBar(SnackBar(content: Text(value)));
+      }
+    });
   }
 
   Widget currentSubredditHeader() {
