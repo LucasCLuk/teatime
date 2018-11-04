@@ -147,7 +147,7 @@ class Account {
     reddit = state;
     await refresh();
     redditor = await state.user.me();
-    await getSubscriptions();
+    await refreshSubscriptions();
   }
 
   Future<Null> delete() async {

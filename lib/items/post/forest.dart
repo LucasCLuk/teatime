@@ -13,7 +13,10 @@ class CommentForestWidget extends StatefulWidget {
   _CommentForestWidgetState createState() => _CommentForestWidgetState();
 }
 
-class _CommentForestWidgetState extends State<CommentForestWidget> {
+class _CommentForestWidgetState extends State<CommentForestWidget>
+    with AutomaticKeepAliveClientMixin {
+  bool isLoaded = false;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -29,22 +32,27 @@ class _CommentForestWidgetState extends State<CommentForestWidget> {
   }
 
   @override
+  // TODO: implement wantKeepAlive
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
     return new StreamBuilder(
       stream: widget.commentBloc.isUpdatedStream,
+      initialData: false,
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         if (snapshot.hasError) {
           return ListTile(title: Text(snapshot.error.toString()));
         }
-        if (snapshot.data == true) {
+        if (snapshot.data == true || isLoaded) {
           return Column(
             children: <Widget>[
               ListView.builder(
                 shrinkWrap: true,
                 physics: ClampingScrollPhysics(),
-                itemCount: widget.commentBloc.loadedComments.length,
+                itemCount: widget.commentBloc.submission.comments.length,
                 itemBuilder: (BuildContext context, int index) {
-                  var item = widget.commentBloc.loadedComments[index];
+                  var item = widget.commentBloc.submission.comments[index];
                   return CommentWidget(
                     key: Key(item?.fullname ?? "em"),
                     comment: item,
@@ -55,7 +63,7 @@ class _CommentForestWidgetState extends State<CommentForestWidget> {
             ],
           );
         } else if (snapshot.data == null &&
-            widget.commentBloc.loadedComments.isEmpty) {
+            widget.commentBloc.submission.comments.length > 0) {
           return new Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

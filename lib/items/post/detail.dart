@@ -241,7 +241,8 @@ class _PostDetailState extends State<PostDetail> {
                     voteable: post,
                   ),
                   new Divider(),
-                  CommentForestWidget(commentBloc: commentBloc)
+                  CommentForestWidget(
+                      key: Key(post.id), commentBloc: commentBloc)
                 ],
               ),
             ),

@@ -161,26 +161,30 @@ class _CommentWidgetState extends State<CommentWidget> {
   }
 
   Widget buildSubComments() {
-    List<dynamic> expandedComments =
-        widget.commentBloc.subComments[comment.parentId];
-    if (comment.children != null && expandedComments != null) {
-      return new ListView.builder(
-        itemCount: expandedComments.length,
-        shrinkWrap: true,
-        physics: ClampingScrollPhysics(),
-        itemBuilder: (context, index) {
-          var item = expandedComments[index];
-          return new CommentWidget(
-            comment: item,
-            commentBloc: widget.commentBloc,
-            depth: item is MoreComments ? nestLevel + 1 : item.depth,
+    var c = comment as MoreComments;
+    return FutureBuilder(
+      future: c.comments(sort: widget.commentBloc.currentSort),
+      builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
+        if (snapshot.data != null && snapshot.data.isNotEmpty) {
+          return new ListView.builder(
+            itemCount: snapshot.data.length,
+            shrinkWrap: true,
+            physics: ClampingScrollPhysics(),
+            itemBuilder: (context, index) {
+              var item = snapshot.data[index];
+              return new CommentWidget(
+                comment: item,
+                commentBloc: widget.commentBloc,
+                depth: item is MoreComments ? nestLevel + 1 : item.depth,
+              );
+            },
           );
-        },
-      );
-    }
-    return Container(
-      width: 0.0,
-      height: 0.0,
+        }
+        return Container(
+          width: 0.0,
+          height: 0.0,
+        );
+      },
     );
   }
 

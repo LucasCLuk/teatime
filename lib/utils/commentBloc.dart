@@ -4,8 +4,6 @@ import 'package:draw/draw.dart';
 import 'package:flutter/material.dart';
 import 'package:rxdart/rxdart.dart';
 
-// TODO Refresh comments require sorting param
-
 class CommentBloc {
   final List<String> sortTypes = [
     "confidence",
@@ -17,8 +15,6 @@ class CommentBloc {
     "qa",
     "live"
   ];
-  List<dynamic> loadedComments = [];
-  Map<String, List<dynamic>> subComments = {};
   final Submission submission;
 
   final _isUpdated = BehaviorSubject<bool>(seedValue: null);
@@ -42,58 +38,35 @@ class CommentBloc {
   }
 
   void loadComments({bool refresh = false}) async {
-    _isUpdated.add(false);
     if (submission.comments?.length == null || refresh) {
+      _isUpdated.add(false);
       try {
         CommentForest forest = await submission.refreshComments(
             params: {"sort": currentSort}).timeout(Duration(seconds: 5));
         try {
           await forest.replaceMore(limit: 100);
-        } catch (e) {}
-        loadedComments.addAll(forest.comments);
+        } catch (e) {
+          _isUpdated.addError(e);
+        }
       } on TimeoutException {
         _isUpdated.add(null);
         return;
       }
-    } else {
-      loadedComments.addAll(submission.comments.comments);
-    }
+    } else {}
     if (!_isUpdated.isClosed) {
-      _isUpdated.add(loadedComments.isNotEmpty);
+      _isUpdated.add(submission.comments.length > 0);
     }
   }
 
   void changeSort(int sortIndex) {
     currentSort = sortTypes[sortIndex];
-    loadedComments.clear();
     _isUpdated.add(false);
     loadComments(refresh: true);
   }
 
-  Future<List<dynamic>> expandReplies(CommentForest forest) async {
-    List<dynamic> _queue = [];
-
-    for (var comment in forest.comments) {
-      if (comment is Comment) {
-        _queue.add(comment);
-        if (comment.replies != null) {
-          try {
-            _queue.addAll(await expandReplies(comment.replies).timeout(Duration(seconds: 5)));
-          } catch (e) {
-          }
-        }
-      } else if (comment is MoreComments) {
-        _queue.add(comment);
-      }
-    }
-    return _queue;
-  }
 
   Future<Null> loadMoreComments(MoreComments more) async {
-    List<dynamic> moreComments = await more.comments(sort: currentSort);
-    if (moreComments.isNotEmpty) {
-      subComments[more.parentId] = moreComments;
-    }
+    await more.comments(sort: currentSort);
   }
 
   void dispose() {

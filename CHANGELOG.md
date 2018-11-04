@@ -3,6 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- Comments disappearing when rotating screen
+- Subscriptions not appearing
+
 ## [Build 22] - 2018-11-03
 
 ### Added

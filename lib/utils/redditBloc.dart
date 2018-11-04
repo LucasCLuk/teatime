@@ -125,18 +125,22 @@ class RedditBloc {
       packageInfo = await PackageInfo.fromPlatform();
       credentials = await RedditCredentials.buildRedditCredentials(packageInfo);
       listingBloc =
-              ListingBloc(endpoint: "/", redditState: this, isSubreddit: true);
+          ListingBloc(endpoint: "/", redditState: this, isSubreddit: true);
       if (preferences.currentAccountName != null) {
-            await preferences.loadCurrentAccount();
-            await createAuthReddit();
-          } else {
-            await createAnonReddit();
-            preferences.currentAccount = Account(reddit: reddit);
-          }
+        await preferences.loadCurrentAccount();
+        await createAuthReddit();
+      } else {
+        await createAnonReddit();
+      }
+      try {
+        await currentAccount.load(state: reddit);
+      } catch (e) {
+        print("Unable to get subscriptions");
+      }
       addListeners();
       if (reddit != null) isBuiltSubject.add(true);
-    } catch (e) {
-    }
+    } catch (e) {}
+
   }
 
   void showSnackBar(String message) {
@@ -158,7 +162,6 @@ class RedditBloc {
             isBuiltSubject.addError(DRAWAuthenticationError(ERRORMESSAGE));
           }
         });
-        await currentAccount.load(state: reddit);
       } catch (e) {
         isBuiltSubject.addError(e);
       }
@@ -219,7 +222,6 @@ class RedditBloc {
       enableUrlBarHiding: true,
       showPageTitle: false,
       animation: new CustomTabsAnimation.slideIn(),
-
     );
     try {
       Reddit authenticatedReddit = Reddit.createWebFlowInstance(
