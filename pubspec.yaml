@@ -7,7 +7,7 @@ description: A reddit mobile app written with Flutter
 # Both the version and the builder number may be overridden in flutter
 # build by specifying --build-name and --build-number, respectively.
 # Read more about versioning at semver.org.
-version: 0.10.1+23
+version: 0.10.2+24
 
 environment:
   sdk: ">=2.0.0-dev.68.0 <3.0.0"
