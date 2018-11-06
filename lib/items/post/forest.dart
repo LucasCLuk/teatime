@@ -19,14 +19,12 @@ class _CommentForestWidgetState extends State<CommentForestWidget>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     widget.commentBloc.loadComments();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     widget.commentBloc.dispose();
   }
@@ -54,7 +52,7 @@ class _CommentForestWidgetState extends State<CommentForestWidget>
                 itemBuilder: (BuildContext context, int index) {
                   var item = widget.commentBloc.submission.comments[index];
                   return CommentWidget(
-                    key: Key(item?.fullname ?? "em"),
+                    key: Key(item?.fullname ?? "em$index"),
                     comment: item,
                     commentBloc: widget.commentBloc,
                   );

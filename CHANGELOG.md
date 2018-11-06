@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+- Fixed profile screen
+- Fixed comments
+
+## [Build 23] - 2018-11-04
 
 ### Fixed
 - Comments disappearing when rotating screen
