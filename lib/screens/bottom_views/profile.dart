@@ -18,7 +18,7 @@ class ProfileWidget extends StatefulWidget {
 }
 
 class _ProfileWidgetState extends State<ProfileWidget>
-    with RouteAware, SingleTickerProviderStateMixin {
+    with RouteAware, TickerProviderStateMixin {
   static final meRequired = ['saved', 'hidden'];
   RedditBloc redditState;
   RedditorRef redditor;
