@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:teatime/screens/general/loading_screen.dart';
 import 'package:teatime/screens/general/retry.dart';
 import 'package:teatime/utils/listingBloc.dart';
+import 'package:draw/draw.dart';
 
 typedef ListingWidgetBuilder<T> = Widget Function(
     BuildContext context, ListingSnapShot<T> item);
@@ -91,10 +94,35 @@ class _ListingState extends State<ListingBuilder> {
     return slivers;
   }
 
-  Widget buildScaffold(){
+  Widget buildScaffold() {
     return Scaffold(
       body: LoadingScreen(),
     );
+  }
+
+  Widget onError(Exception error) {
+    switch (error.runtimeType) {
+      case DRAWAuthenticationError:
+        return Center(child: Text("Unable to process request"));
+      case TimeoutException:
+        return RetryWidget(
+          message: Text("Request timed out"),
+          onTap: () => listingBloc.load(refresh: true),
+        );
+      case DRAWInternalError:
+        return RetryWidget(
+          message: Text((error as DRAWInternalError).message),
+        );
+      default:
+        if (widget.error != null) {
+          return widget.error(error);
+        } else {
+          return RetryWidget(
+            message: Text(error.toString()),
+            onTap: () => listingBloc.load(refresh: true),
+          );
+        }
+    }
   }
 
   @override
@@ -104,14 +132,7 @@ class _ListingState extends State<ListingBuilder> {
       initialData: false,
       builder: (BuildContext context, AsyncSnapshot<bool> snapshot) {
         if (snapshot.hasError) {
-          if (widget.error != null) {
-            return widget.error(snapshot.error);
-          } else {
-            return RetryWidget(
-              message: Text(snapshot.error.toString()),
-              onTap: () => listingBloc.load(refresh: true),
-            );
-          }
+          onError(snapshot.error);
         }
         if (listingBloc.loadedData.isNotEmpty) {
           return RefreshIndicator(
@@ -129,8 +150,8 @@ class _ListingState extends State<ListingBuilder> {
           return widget.empty ??
               RetryWidget(
                   onTap: () => widget.listingBloc.load(
-                    refresh: true,
-                  ));
+                        refresh: true,
+                      ));
         } else {
           return CustomScrollView(
             slivers: <Widget>[widget.sliverAppBar],
