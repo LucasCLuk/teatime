@@ -1,12 +1,12 @@
 import 'dart:async';
 
-import 'package:teatime/items/profile/profile.dart';
-import 'package:teatime/screens/general/loading_screen.dart';
-import 'package:teatime/screens/general/retry.dart';
 import 'package:async/async.dart';
 import 'package:draw/draw.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:teatime/items/profile/profile.dart';
+import 'package:teatime/screens/general/loading_screen.dart';
+import 'package:teatime/screens/general/retry.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
 class About extends StatefulWidget {
@@ -99,13 +99,6 @@ class _AboutState extends State<About>
                             padding: const EdgeInsets.all(8.0),
                             child: Text(redditor?.displayName ?? ""),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: new OutlineButton.icon(
-                                onPressed: null,
-                                icon: Icon(Icons.add_circle),
-                                label: Text("Follow")),
-                          )
                         ],
                       ),
                     ),

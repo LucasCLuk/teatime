@@ -1,10 +1,10 @@
+import 'package:draw/draw.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_list_drag_and_drop/drag_and_drop_list.dart';
 import 'package:teatime/items/general/general.dart';
 import 'package:teatime/items/subreddit/tile.dart';
 import 'package:teatime/utils/redditBloc.dart';
 import 'package:teatime/utils/redditViewModel.dart';
-import 'package:draw/draw.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_list_drag_and_drop/drag_and_drop_list.dart';
 
 class SubscriptionWidget extends StatefulWidget {
   @override
@@ -91,7 +91,7 @@ class _SubscriptionWidgetState extends State<SubscriptionWidget>
   void sortAlpha() async {
     redditState.currentAccount.subscriptionOrder
         .sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    await redditState.currentAccount.save();
+    await redditState.currentAccount.saveSubscriptions();
     setState(() {});
   }
 
@@ -113,7 +113,7 @@ class _SubscriptionWidgetState extends State<SubscriptionWidget>
   void changeIndex(int before, int after) async {
     var item = redditState.currentAccount.subscriptionOrder.removeAt(before);
     redditState.currentAccount.subscriptionOrder.insert(after, item);
-    await redditState.currentAccount.save();
+    await redditState.currentAccount.saveSubscriptions();
     setState(() {});
   }
 
@@ -136,7 +136,7 @@ class _SubscriptionWidgetState extends State<SubscriptionWidget>
               onDragFinish: changeIndex,
               itemBuilder: (BuildContext context, dynamic item, int index) {
                 Subreddit subreddit =
-                    redditState.currentAccount.subscriptions[item];
+                redditState.currentAccount.subscriptions[item];
                 if (subreddit != null) {
                   return SubredditTile(
                     subreddit: subreddit,

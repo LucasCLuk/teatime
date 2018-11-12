@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+- Fixed subscription order not saving
+- Removed several non working features
+
+## [Build 24] - 2018-11-06
 - Fixed profile screen
 - Fixed comments
 

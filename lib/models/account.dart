@@ -11,7 +11,8 @@ final List<String> authFields = [
   'refreshToken',
   'tokenEndpoint',
   'scopes',
-  'expiration'
+  'expiration',
+  'subscriptions'
 ];
 
 class Account {
@@ -51,7 +52,7 @@ class Account {
     refreshToken = data['refreshToken'];
     tokenEndpoint = data['tokenEndpoint'];
     scopes = List.castFrom(data['scopes']);
-    if (data.containsKey("subscriptions")){
+    if (data.containsKey("subscriptions")) {
       (data['subscriptions'] as List<dynamic>)
           .forEach((item) => subscriptionOrder.add((item as String)));
     }
@@ -170,6 +171,11 @@ class Account {
         print(e);
       }
     });
+  }
+
+  Future<Null> saveSubscriptions() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList("subscriptions", subscriptionOrder);
   }
 
   static Future<Map<String, dynamic>> get() async {
